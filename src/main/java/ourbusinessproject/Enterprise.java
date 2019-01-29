@@ -84,5 +84,9 @@ public class Enterprise {
         }
         projects.add(project);
     }
+    
+    public void setProjects(Collection<Project> projects) {
+    	this.projects = projects;
+    }
 
 }

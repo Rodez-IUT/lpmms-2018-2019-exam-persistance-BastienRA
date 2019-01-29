@@ -17,16 +17,19 @@ public class Project {
 
     private String description;
 
+    @Version
+    private long version;
 
-    @NotNull
+	@NotNull
     @ManyToOne(cascade = {CascadeType.PERSIST})
     private Enterprise enterprise;
 
-    public Project() {}
+    public Project() {this.version = 0;}
 
     public Project(String title, String description) {
         this.title = title;
         this.description = description;
+        this.version = 0;
     }
 
     public Long getId() {
@@ -56,4 +59,8 @@ public class Project {
     public void setEnterprise(Enterprise enterprise) {
         this.enterprise = enterprise;
     }
+    
+    public long getVersion() {
+		return version;
+	}
 }

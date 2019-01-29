@@ -6,6 +6,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
+
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -16,18 +18,39 @@ public class EnterpriseProjectService {
     private EntityManager entityManager;
 
     public Project saveProjectForEnterprise(Project project, Enterprise enterprise) {
-        saveEnterprise(enterprise);
-        project.setEnterprise(enterprise);
-        enterprise.addProject(project);
-        entityManager.persist(project);
+        Enterprise newEnterprise = saveEnterprise(enterprise);
+        newEnterprise = entityManager.merge(newEnterprise);
+        project.setEnterprise(newEnterprise);
+        Project newProject = entityManager.merge(project);
+        newEnterprise.addProject(newProject);
+        /* Trouver l'entreprise qui a ce project si il est déjà a une
+         * entreprise et retirer a cette entreprise le project
+         */
+        
+        Project oldProject  = findProjectById(newProject.getId());
+        if (oldProject != null) {
+        	Enterprise oldEnterprise = findEnterpriseById(oldProject.getId());
+        	if (oldEnterprise != null) {
+        		Collection<Project> listOldProjectForOldEnterprise = oldEnterprise.getProjects();
+                if (listOldProjectForOldEnterprise.contains(oldProject)) {
+                	listOldProjectForOldEnterprise.remove(oldProject);
+                	oldEnterprise.setProjects(listOldProjectForOldEnterprise);
+                	saveEnterprise(oldEnterprise);
+                }
+        	}
+        }
+        
+        saveEnterprise(newEnterprise);
+        entityManager.persist(newProject);
         entityManager.flush();
-        return project;
+        return newProject;
     }
 
     public Enterprise saveEnterprise(Enterprise enterprise) {
-        entityManager.persist(enterprise);
+    	Enterprise managedEnterprise = entityManager.merge(enterprise);
+        entityManager.persist(managedEnterprise);
         entityManager.flush();
-        return enterprise;
+        return managedEnterprise;
     }
 
     public Project findProjectById(Long id) {
